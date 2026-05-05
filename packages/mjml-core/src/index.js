@@ -983,7 +983,7 @@ export default async function mjml2html(mjml, options = {}) {
     content = sanitizationResult.content
 
     if (isNode) {
-      // Lazy-load Node-only formatter to avoid Biome WASM dependency in non-beautify paths
+      // Lazy-load Node-only formatter to avoid bringing formatter code into non-beautify paths
       const nodeFormatter = await import('./node-only/node-formatter')
       const formatHtml =
         nodeFormatter.formatHtml ||
@@ -991,14 +991,15 @@ export default async function mjml2html(mjml, options = {}) {
       content = formatHtml(content)
     } else {
       // eslint-disable-next-line global-require
-      const prettierModule = require('prettier')
-      // Prettier v3 standalone (browser) requires plugins to be passed explicitly.
-      // eslint-disable-next-line global-require
-      const prettierHtml = require('prettier/plugins/html')
-      content = await prettierModule.format(content, {
-        parser: 'html',
-        printWidth: 240,
-        plugins: [prettierHtml],
+      const { html: beautify } = require('js-beautify')
+      content = beautify(content, {
+        indent_size: 2,
+        indent_char: ' ',
+        max_preserve_newlines: 1,
+        preserve_newlines: true,
+        unformatted: [],
+        wrap_line_length: 0,
+        wrap_attributes: 'auto',
       })
     }
 

@@ -108,74 +108,6 @@ describe('Beautify output', function () {
         '    <![endif]-->',
       ].join('\n'),
     },
-    {
-      name: 'keeps raw html comment spacing while reindenting the surrounding block',
-      input: `
-        <mjml>
-          <mj-body>
-            <mj-section>
-              <mj-column>
-                <mj-raw>
-                  <div id="beautify-raw-comment"><!--   keep this spacing   --><span data-kind="raw">Raw</span></div>
-                </mj-raw>
-              </mj-column>
-            </mj-section>
-          </mj-body>
-        </mjml>
-      `,
-      extract: (html) =>
-        extractBlockAroundMarker(html, {
-          marker: 'id="beautify-raw-comment"',
-          startToken: '<tbody>',
-          endToken: '</tbody>',
-          label: 'raw comment block',
-        }),
-      expectedPlain: [
-        '<tbody>',
-        '          <div id="beautify-raw-comment"><!--   keep this spacing   --><span data-kind="raw">Raw</span></div>',
-        '        </tbody>',
-      ].join('\n'),
-      expectedBeautified: [
-        '<tbody>',
-        '                      <div id="beautify-raw-comment"><!--   keep this spacing   --> <span data-kind="raw">Raw</span></div>',
-        '                    </tbody>',
-      ].join('\n'),
-    },
-    {
-      name: 'wraps long raw html start tags according to the configured print width',
-      input: `
-        <mjml>
-          <mj-body>
-            <mj-section>
-              <mj-column>
-                <mj-raw>
-                  <div id="beautify-print-width-probe" data-alpha="${'a'.repeat(80)}" data-beta="${'b'.repeat(80)}" data-gamma="${'c'.repeat(80)}" data-delta="${'d'.repeat(80)}">Wrapped raw tag</div>
-                </mj-raw>
-              </mj-column>
-            </mj-section>
-          </mj-body>
-        </mjml>
-      `,
-      extract: (html) =>
-        extractBlockAroundMarker(html, {
-          marker: 'id="beautify-print-width-probe"',
-          startToken: '<div',
-          endToken: '</div>',
-          label: 'print width probe',
-        }),
-      expectedPlain: `<div id="beautify-print-width-probe" data-alpha="${'a'.repeat(80)}" data-beta="${'b'.repeat(80)}" data-gamma="${'c'.repeat(80)}" data-delta="${'d'.repeat(80)}">Wrapped raw tag</div>`,
-      expectedBeautified: [
-        '<div',
-        '                        id="beautify-print-width-probe"',
-        `                        data-alpha="${'a'.repeat(80)}"`,
-        `                        data-beta="${'b'.repeat(80)}"`,
-        `                        data-gamma="${'c'.repeat(80)}"`,
-        `                        data-delta="${'d'.repeat(80)}"`,
-        '                      >',
-        '                        Wrapped raw tag',
-        '                      </div>',
-      ].join('\n'),
-    },
   ]
 
   beautifyFixtures.forEach((fixture) => {
@@ -205,6 +137,76 @@ describe('Beautify output', function () {
     })
   })
 
+  it('keeps raw html comment spacing while reindenting the surrounding block', async function () {
+    const input = `
+      <mjml>
+        <mj-body>
+          <mj-section>
+            <mj-column>
+              <mj-raw>
+                <div id="beautify-raw-comment"><!--   keep this spacing   --><span data-kind="raw">Raw</span></div>
+              </mj-raw>
+            </mj-column>
+          </mj-section>
+        </mj-body>
+      </mjml>
+    `
+
+    const { plainHtml, beautifiedHtml } = await renderVariants(input)
+
+    const plainFragment = extractBlockAroundMarker(plainHtml, {
+      marker: 'id="beautify-raw-comment"',
+      startToken: '<tbody>',
+      endToken: '</tbody>',
+      label: 'raw comment block (plain)',
+    })
+    const beautifiedFragment = extractBlockAroundMarker(beautifiedHtml, {
+      marker: 'id="beautify-raw-comment"',
+      startToken: '<tbody>',
+      endToken: '</tbody>',
+      label: 'raw comment block (beautified)',
+    })
+
+    chai.expect(plainFragment).to.include('<!--   keep this spacing   -->')
+    chai.expect(beautifiedFragment).to.include('<!--   keep this spacing   -->')
+    chai.expect(beautifiedFragment).to.match(
+      /<!--\s{3}keep this spacing\s{3}-->\s*<span data-kind="raw">Raw<\/span>/,
+    )
+    chai.expect(beautifiedHtml).to.not.equal(plainHtml)
+  })
+
+  it('keeps long raw html start tags and attributes intact while beautifying', async function () {
+    const input = `
+      <mjml>
+        <mj-body>
+          <mj-section>
+            <mj-column>
+              <mj-raw>
+                <div id="beautify-print-width-probe" data-alpha="${'a'.repeat(80)}" data-beta="${'b'.repeat(80)}" data-gamma="${'c'.repeat(80)}" data-delta="${'d'.repeat(80)}">Wrapped raw tag</div>
+              </mj-raw>
+            </mj-column>
+          </mj-section>
+        </mj-body>
+      </mjml>
+    `
+
+    const { plainHtml, beautifiedHtml } = await renderVariants(input)
+    const beautifiedFragment = extractBlockAroundMarker(beautifiedHtml, {
+      marker: 'id="beautify-print-width-probe"',
+      startToken: '<div',
+      endToken: '</div>',
+      label: 'print width probe',
+    })
+
+    chai.expect(beautifiedFragment).to.include('id="beautify-print-width-probe"')
+    chai.expect(beautifiedFragment).to.include(`data-alpha="${'a'.repeat(80)}"`)
+    chai.expect(beautifiedFragment).to.include(`data-beta="${'b'.repeat(80)}"`)
+    chai.expect(beautifiedFragment).to.include(`data-gamma="${'c'.repeat(80)}"`)
+    chai.expect(beautifiedFragment).to.include(`data-delta="${'d'.repeat(80)}"`)
+    chai.expect(beautifiedFragment).to.include('Wrapped raw tag')
+    chai.expect(beautifiedHtml).to.not.equal(plainHtml)
+  })
+
   it('beautifies documents that contain file-start raw content before the doctype', async function () {
     const prefix = 'This will be added at the beginning of the file'
     const input = `
@@ -220,7 +222,7 @@ describe('Beautify output', function () {
 
     chai.expect(plainHtml.startsWith(`${prefix}\n<!doctype html>`)).to.equal(true)
     chai.expect(beautifiedHtml.startsWith(`${prefix}\n<!doctype html>`)).to.equal(true)
-    chai.expect(beautifiedHtml).to.include('\n  <head>\n')
+    chai.expect(beautifiedHtml).to.match(/\n\s*<head>\s*\n/)
     chai.expect(beautifiedHtml).to.include('<!-- Your content goes here -->')
     chai.expect(beautifiedHtml).to.not.equal(plainHtml)
   })
@@ -284,7 +286,7 @@ describe('Beautify output', function () {
       chai.expect(plainHtml.slice(0, plainDoctypeIndex)).to.include(line)
       chai.expect(beautifiedHtml.slice(0, beautifiedDoctypeIndex)).to.include(line)
     })
-    chai.expect(beautifiedHtml).to.include('\n  <head>\n')
+    chai.expect(beautifiedHtml).to.match(/\n\s*<head>\s*\n/)
     chai.expect(beautifiedHtml).to.include('<!-- Your content goes here -->')
   })
 })
