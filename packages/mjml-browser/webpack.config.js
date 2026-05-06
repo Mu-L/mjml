@@ -24,8 +24,6 @@ module.exports = {
       'os': 'os-browserify/browser',
       [path.resolve(__dirname, '../mjml-core/lib/helpers/mjmlconfig.js')]: path.resolve(__dirname, 'browser-mocks/mjmlconfig'),
       [path.resolve(__dirname, '../mjml-core/lib/helpers/mjmlconfig')]: path.resolve(__dirname, 'browser-mocks/mjmlconfig'),
-      [path.resolve(__dirname, '../mjml-core/lib/node-only/node-formatter.js')]: path.resolve(__dirname, 'browser-mocks/node-formatter'),
-      [path.resolve(__dirname, '../mjml-core/lib/node-only/node-formatter')]: path.resolve(__dirname, 'browser-mocks/node-formatter'),
       [path.resolve(__dirname, '../mjml-core/lib/node-only/skeleton-loader.js')]: path.resolve(__dirname, 'browser-mocks/skeleton-loader'),
       [path.resolve(__dirname, '../mjml-core/lib/node-only/skeleton-loader')]: path.resolve(__dirname, 'browser-mocks/skeleton-loader'),
     },

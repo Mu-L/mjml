@@ -289,4 +289,35 @@ describe('Beautify output', function () {
     chai.expect(beautifiedHtml).to.match(/\n\s*<head>\s*\n/)
     chai.expect(beautifiedHtml).to.include('<!-- Your content goes here -->')
   })
+
+  it('preserves twig loop tags in mj-text while beautifying', async function () {
+    const input = `
+      <mjml>
+        <mj-body>
+          <mj-section>
+            <mj-column>
+              <mj-text>{% for item in items %}{{ item }}{% endfor %}</mj-text>
+            </mj-column>
+          </mj-section>
+        </mj-body>
+      </mjml>
+    `
+
+    const { plainHtml, beautifiedHtml } = await renderVariants(input, {
+      templateSyntax: [{ prefix: '{%', suffix: '%}' }, { prefix: '{{', suffix: '}}' }],
+      allowMixedSyntax: true,
+    })
+
+    chai.expect(plainHtml).to.include('{% for item in items %}')
+    chai.expect(plainHtml).to.include('{{ item }}')
+    chai.expect(plainHtml).to.include('{% endfor %}')
+
+    chai.expect(beautifiedHtml).to.include('{% for item in items %}')
+    chai.expect(beautifiedHtml).to.include('{{ item }}')
+    chai.expect(beautifiedHtml).to.include('{% endfor %}')
+
+    chai.expect(beautifiedHtml).to.not.include('{% for item in items % }')
+    chai.expect(beautifiedHtml).to.not.include('{ % for item in items %}')
+    chai.expect(beautifiedHtml).to.not.equal(plainHtml)
+  })
 })

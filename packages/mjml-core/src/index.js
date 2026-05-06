@@ -26,6 +26,7 @@ import globalComponents, {
 } from './components'
 
 import makeLowerBreakpoint from './helpers/makeLowerBreakpoint'
+import { formatHtml } from './helpers/formatHtml'
 import suffixCssClasses from './helpers/suffixCssClasses'
 import mergeOutlookConditionnals from './helpers/mergeOutlookConditionnals'
 import minifyOutlookConditionnals from './helpers/minifyOutlookConditionnals'
@@ -982,26 +983,7 @@ export default async function mjml2html(mjml, options = {}) {
     )
     content = sanitizationResult.content
 
-    if (isNode) {
-      // Lazy-load Node-only formatter to avoid bringing formatter code into non-beautify paths
-      const nodeFormatter = await import('./node-only/node-formatter')
-      const formatHtml =
-        nodeFormatter.formatHtml ||
-        (nodeFormatter.default && nodeFormatter.default.formatHtml)
-      content = formatHtml(content)
-    } else {
-      // eslint-disable-next-line global-require
-      const { html: beautify } = require('js-beautify')
-      content = beautify(content, {
-        indent_size: 2,
-        indent_char: ' ',
-        max_preserve_newlines: 1,
-        preserve_newlines: true,
-        unformatted: [],
-        wrap_line_length: 0,
-        wrap_attributes: 'auto',
-      })
-    }
+    content = formatHtml(content)
 
     if (sanitizationResult.didSanitize) {
       content = restoreTemplateVariablesInHtml(
