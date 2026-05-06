@@ -18,15 +18,12 @@ module.exports = {
       'path': 'path-browserify',
       'fs': path.resolve(__dirname, 'browser-mocks/fs'),
       'cssnano-preset-lite': path.resolve(__dirname, 'browser-mocks/empty'),
-      'uglify-js': path.resolve(__dirname, 'browser-mocks/uglify-js'),
       'minify': path.resolve(__dirname, 'browser-mocks/minify'),
       'htmlnano': path.resolve(__dirname, 'browser-mocks/htmlnano'),
       'terser': path.resolve(__dirname, 'browser-mocks/empty'),
       'os': 'os-browserify/browser',
       [path.resolve(__dirname, '../mjml-core/lib/helpers/mjmlconfig.js')]: path.resolve(__dirname, 'browser-mocks/mjmlconfig'),
       [path.resolve(__dirname, '../mjml-core/lib/helpers/mjmlconfig')]: path.resolve(__dirname, 'browser-mocks/mjmlconfig'),
-      [path.resolve(__dirname, '../mjml-core/lib/node-only/node-formatter.js')]: path.resolve(__dirname, 'browser-mocks/node-formatter'),
-      [path.resolve(__dirname, '../mjml-core/lib/node-only/node-formatter')]: path.resolve(__dirname, 'browser-mocks/node-formatter'),
       [path.resolve(__dirname, '../mjml-core/lib/node-only/skeleton-loader.js')]: path.resolve(__dirname, 'browser-mocks/skeleton-loader'),
       [path.resolve(__dirname, '../mjml-core/lib/node-only/skeleton-loader')]: path.resolve(__dirname, 'browser-mocks/skeleton-loader'),
     },
@@ -77,7 +74,7 @@ module.exports = {
     rules: [
       {
         test: /\.m?js$/,
-        exclude: file => /node_modules/.test(file) && !/node_modules\/(htmlparser2|prettier)/.test(file),
+        exclude: file => /node_modules/.test(file) && !/node_modules\/(htmlparser2|js-beautify)/.test(file),
         use: [
           {
             loader: 'babel-loader',

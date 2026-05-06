@@ -26,6 +26,7 @@ import globalComponents, {
 } from './components'
 
 import makeLowerBreakpoint from './helpers/makeLowerBreakpoint'
+import { formatHtml } from './helpers/formatHtml'
 import suffixCssClasses from './helpers/suffixCssClasses'
 import mergeOutlookConditionnals from './helpers/mergeOutlookConditionnals'
 import minifyOutlookConditionnals from './helpers/minifyOutlookConditionnals'
@@ -982,25 +983,7 @@ export default async function mjml2html(mjml, options = {}) {
     )
     content = sanitizationResult.content
 
-    if (isNode) {
-      // Lazy-load Node-only formatter to avoid Biome WASM dependency in non-beautify paths
-      const nodeFormatter = await import('./node-only/node-formatter')
-      const formatHtml =
-        nodeFormatter.formatHtml ||
-        (nodeFormatter.default && nodeFormatter.default.formatHtml)
-      content = formatHtml(content)
-    } else {
-      // eslint-disable-next-line global-require
-      const prettierModule = require('prettier')
-      // Prettier v3 standalone (browser) requires plugins to be passed explicitly.
-      // eslint-disable-next-line global-require
-      const prettierHtml = require('prettier/plugins/html')
-      content = await prettierModule.format(content, {
-        parser: 'html',
-        printWidth: 240,
-        plugins: [prettierHtml],
-      })
-    }
+    content = formatHtml(content)
 
     if (sanitizationResult.didSanitize) {
       content = restoreTemplateVariablesInHtml(
